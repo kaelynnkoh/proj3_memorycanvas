@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stargazing Date Simulator</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+      overflow: hidden;
+      font-family: 'Segoe UI', sans-serif;
+      color: white;
+    }
+
+    header {
+      position: absolute;
+      top: 20px;
+      width: 100%;
+      text-align: center;
+      font-size: 2rem;
+      color: #fff;
+      z-index: 3;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
+    }
+
+    canvas {
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    .message-box {
+      position: absolute;
+      background: rgba(0, 0, 0, 0.8);
+      border: 1px solid #ffffff55;
+      padding: 10px 15px;
+      border-radius: 8px;
+      max-width: 300px;
+      display: none;
+      z-index: 2;
+    }
+  </style>
+</head>
+<body>
+  <header>Our Memories ✨</header>
+  <canvas id="sky"></canvas>
+  <div id="messageBox" class="message-box"></div>
+
+  <script>
+    const canvas = document.getElementById('sky');
+    const ctx = canvas.getContext('2d');
+    const messageBox = document.getElementById('messageBox');
+    let width, height;
+
+    const stars = [];
+    const meteors = [];
+    const constellations = [
+      { x: 150, y: 200, message: "Our first stargazing night 🌌 in California" },
+      { x: 400, y: 100, message: "You looked at me like I was the whole galaxy 💫" },
+      { x: 300, y: 300, message: "We found our favorite star 🌟 together" },
+      { x: 250, y: 450, message: "You made a wish... and so did I 💖" },
+      { x: 200, y: 500, message: "And I miss you ..." }
+    ];
+
+    function resizeCanvas() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+
+    function createStars(count = 200) {
+      for (let i = 0; i < count; i++) {
+        stars.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          radius: Math.random() * 1.2,
+          alpha: Math.random()
+        });
+      }
+    }
+
+    function createMeteor() {
+      meteors.push({
+        x: Math.random() * width,
+        y: Math.random() * height * 0.5,
+        length: Math.random() * 80 + 40,
+        speed: Math.random() * 4 + 2,
+        opacity: 1
+      });
+    }
+
+    function drawSky() {
+      ctx.clearRect(0, 0, width, height);
+      
+      // Stars
+      stars.forEach(star => {
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.radius, 0, 2 * Math.PI);
+        ctx.fillStyle = `rgba(255, 255, 255, ${star.alpha})`;
+        ctx.fill();
+      });
+
+      // Constellation lines
+      ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < constellations.length - 1; i++) {
+        const a = constellations[i];
+        const b = constellations[i + 1];
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.stroke();
+      }
+
+      // Constellation points
+      constellations.forEach(c => {
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, 5, 0, 2 * Math.PI);
+        ctx.fillStyle = 'white';
+        ctx.fill();
+      });
+
+      // Meteors
+      meteors.forEach((m, index) => {
+        ctx.beginPath();
+        ctx.moveTo(m.x, m.y);
+        ctx.lineTo(m.x + m.length, m.y + m.length * 0.3);
+        ctx.strokeStyle = `rgba(255,255,255,${m.opacity})`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        m.x += m.speed;
+        m.y += m.speed * 0.3;
+        m.opacity -= 0.01;
+
+        if (m.opacity <= 0) meteors.splice(index, 1);
+      });
+    }
+
+    canvas.addEventListener('click', function(e) {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      for (const c of constellations) {
+        const dx = c.x - x;
+        const dy = c.y - y;
+        if (dx * dx + dy * dy < 1000) {
+          showMessage(c.message, x, y);
+          return;
+        }
+      }
+      messageBox.style.display = 'none';
+    });
+
+    function showMessage(msg, x, y) {
+      messageBox.style.left = `${x + 15}px`;
+      messageBox.style.top = `${y - 10}px`;
+      messageBox.textContent = msg;
+      messageBox.style.display = 'block';
+    }
+
+    function animate() {
+      drawSky();
+      if (Math.random() < 0.02) createMeteor();
+      requestAnimationFrame(animate);
+    }
+
+    window.addEventListener('resize', () => {
+      resizeCanvas();
+    });
+
+    resizeCanvas();
+    createStars();
+    animate();
+  </script>
+</body>
+</html>
